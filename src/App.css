@@ -24,6 +24,10 @@
   color: white;
 }
 
+.loginContainer {
+  margin: 50px;
+}
+
 .App-link {
   color: #61dafb;
 }
