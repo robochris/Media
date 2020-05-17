@@ -60,11 +60,12 @@ app.get('/post/:user', (req, res) => {
 app.post('/post/:user', (req,res) => {
   const users = db.collection('users')
   const posts = db.collection('post')
-  posts.insertOne(req.body.postData)
+  console.log(req.body)
+  posts.insertOne({img: "https://picsum.photos/200/300", user: req.params.user, caption: req.body.caption, comments:[]})
     .then((result)=>{
       users.findOneAndUpdate({username: req.params.user}, {$push: {post:{_id: result.ops[0]._id.toHexString()}}})
         .then((userPost)=>{
-          console.log(userPost)
+          console.log(res.send(userPost))
         })
     })
 })
@@ -72,12 +73,15 @@ app.post('/post/:user', (req,res) => {
 app.post('/postRemove/:user', (req,res) => {
   const users = db.collection('users')
   const posts = db.collection('post')
-  console.log(req.body)
-  console.log("space")
   users.findOneAndUpdate({username: req.params.user}, {$pull: {post:{_id: req.body.id}}})
-  .then(result=> {console.log(result.value.post)})
   posts.findOneAndDelete({_id: ObjectId(req.body.id)})
-  .then(result=> {console.log(result)})
+})
+
+app.post('/postComment/:user', (req, res) => {
+  const users = db.collection('users')
+  const posts = db.collection('post')
+  console.log(req.body.comment)
+  posts.findOneAndUpdate({_id: ObjectId(req.body.id)}, {$push: {comments: {user: req.params.user, comment: req.body.comment, reply: []}}})
 })
 
 client.connect()

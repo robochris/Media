@@ -3,6 +3,7 @@ import './App.css';
 import Home from './Home.js'
 import Login from './Login.js'
 import SignUp from './SignUp.js'
+import AddPost from './AddPost.js'
 import {
   BrowserRouter as Router,
   Switch,
@@ -31,6 +32,9 @@ export default function App() {
           </Route>
           <Route exact path="/">
             <Home />
+          </Route>
+          <Route path="/addPost">
+            <AddPost/>
           </Route>
           <Route path="/SignUp">
             <SignUp/>
