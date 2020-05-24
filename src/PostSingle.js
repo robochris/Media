@@ -4,18 +4,16 @@ import './App.css';
 import axios from 'axios'
 //Change to hook
 
-const removePost = async (id) => {
-  console.log("removepost")
-  return await axios.post('http://localhost:6969/postRemove/q', {id}).then(function(res){
+const removePost = async (id, username) => {
+  return await axios.post('http://localhost:6969/postRemove/'+username, {id}).then(function(res){
      return res.data
    }).catch(function(err){
        console.log(err)
      });
 }
 
-const commentPost = async (id, comment) => {
-  console.log("commentpost")
-  return await axios.post('http://localhost:6969/postComment/q', {id, comment}).then(function(res){
+const commentPost = async (id, comment, username) => {
+  return await axios.post('http://localhost:6969/postComment/'+username, {id, comment}).then(function(res){
      return res.data
    }).catch(function(err){
        console.log(err)
@@ -30,17 +28,16 @@ class SinglePost extends Component {
   }
  }
 
- removeClick(id){
-   console.log("removeID: "+id)
-   removePost(id)
+ removeClick(id, username){
+   removePost(id, username)
  }
 
- commentClick(id, comment) {
-   commentPost(id, comment)
+ commentClick(id, comment, username) {
+   commentPost(id, comment, username)
  }
 
  render() {
-  console.log(this.props.post)
+  const username = this.props.user.username
   const post = this.props.post
   return (
       <div>
@@ -57,9 +54,9 @@ class SinglePost extends Component {
             <CommentPost comment={comments}/>
           ))}
           </div>
-          <button onClick={() => this.removeClick(post._id)}>Remove</button>
+          <button onClick={() => this.removeClick(post._id, username)}>Remove</button>
           <input type="text" onChange={(event) => this.setState({comment:event.target.value})}/>
-          <button onClick={() => this.commentClick(post._id, this.state.comment)}>comment</button>
+          <button onClick={() => this.commentClick(post._id, this.state.comment, username)}>comment</button>
         </div>
       </div>
   );

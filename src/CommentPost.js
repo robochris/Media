@@ -12,11 +12,10 @@ class CommentPost extends Component {
  }
 
  render() {
-  console.log(this.props.post)
   const comment = this.props.comment
   return (
       <div>
-        {comment.comment}
+        {comment.user}{comment.comment}
         <button>reply</button>
       </div>
   );

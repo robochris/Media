@@ -4,6 +4,7 @@ import Home from './Home.js'
 import Login from './Login.js'
 import SignUp from './SignUp.js'
 import AddPost from './AddPost.js'
+import Profile from './Profile.js'
 import {
   BrowserRouter as Router,
   Switch,
@@ -38,6 +39,8 @@ export default function App() {
           </Route>
           <Route path="/SignUp">
             <SignUp/>
+          </Route>
+          <Route path="/profile/:username" component={Profile}>
           </Route>
         </Switch>
       </div>

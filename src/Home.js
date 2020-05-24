@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import { withRouter } from 'react-router-dom';
 import { connect } from 'react-redux'
+import SearchField from './SearchField'
 import Post from './Post'
 import './App.css';
 
@@ -20,6 +21,7 @@ class Home extends Component {
   } else {
     return (
       <div>
+        <SearchField user={this.props.user}/>
         <Post/>
       </div>
     );
