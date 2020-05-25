@@ -8,8 +8,8 @@ const mapStateToProps = (state) => ({
   user: state.session.user
 })
 
-const addPost = async (caption, username) => {
-  return await axios.post('http://localhost:6969/post/'+username, {caption}).then(function(res){
+const addPost = async (username, addBody) => {
+  return await axios.post('http://localhost:6969/post/'+username, addBody).then(function(res){
      return res.data
    }).catch(function(err){
        console.log(err)
@@ -24,8 +24,9 @@ class AddPost extends Component {
   }
  }
 
-addClick(caption, username) {
-  addPost(caption, username).then(result=>{
+addClick(caption, username, userId) {
+  const addBody = {caption, userId}
+  addPost(username, addBody).then(result=>{
       this.props.history.push('/')
   })
 }
@@ -36,7 +37,7 @@ addClick(caption, username) {
    return (
       <div>
         <input type="text" onChange={(event) => this.setState({caption: event.target.value})}/>
-        <button onClick={() => this.addClick(this.state.caption, this.props.user.username)}>ADD</button>
+        <button onClick={() => this.addClick(this.state.caption, this.props.user.username, this.props.user._id)}>ADD</button>
       </div>
   );
  }

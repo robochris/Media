@@ -44,6 +44,19 @@ app.post('/login', (req, res) => {
     })
 })
 
+app.get('/allPost/:user', (req,res) => {
+  const users = db.collection('users')
+  const post = db.collection('post')
+  users.findOne({username: req.params.user})
+    .then(user => {
+      post.find({userId: {$in: user.follow}}).sort({_id: -1}).toArray(function(e, result){
+        console.log("Error: ", e)
+        console.log("Result: ", result)
+        res.send(result)
+      })
+    })
+})
+
 app.get('/post/:user', (req, res) => {
   const users = db.collection('users')
   const post = db.collection('post')
@@ -61,7 +74,7 @@ app.post('/post/:user', (req,res) => {
   const users = db.collection('users')
   const posts = db.collection('post')
   console.log(req.body)
-  posts.insertOne({img: "https://picsum.photos/200/300", user: req.params.user, caption: req.body.caption, comments:[]})
+  posts.insertOne({img: "https://picsum.photos/200/300", userId: ObjectId(req.body.userId), user: req.params.user, caption: req.body.caption, comments:[]})
     .then((result)=>{
       users.findOneAndUpdate({username: req.params.user}, {$push: {post:{_id: result.ops[0]._id.toHexString()}}})
         .then((userPost)=>{
@@ -101,8 +114,8 @@ app.post('/search/result', (req,res) => {
 
 app.post('/addFollow', (req,res) => {
   const users = db.collection('users')
-  users.findOneAndUpdate({_id: ObjectId(req.body.userId)}, {$push: {follow: {_id: req.body.userFollow}}}).then(result=>{console.log(result)})
-  users.findOneAndUpdate({_id: ObjectId(req.body.userFollow)}, {$push: {followers: {_id: req.body.userId}}}).then(result=>{console.log(result)})
+  users.findOneAndUpdate({_id: ObjectId(req.body.userId)}, {$push: {follow: ObjectId(req.body.userFollow)}}).then(result=>{console.log(result)})
+  users.findOneAndUpdate({_id: ObjectId(req.body.userFollow)}, {$push: {followers: ObjectId(req.body.userId)}}).then(result=>{console.log(result)})
 })
 
 client.connect()

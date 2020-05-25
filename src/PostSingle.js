@@ -43,14 +43,14 @@ class SinglePost extends Component {
       <div>
         <div className="loginContainer">
           <div className="Postuser">
-            {post.result.user}
+            {post.user}
           </div>
-          <img src={post.result.img}/>
+          <img src={post.img}/>
           <div className="caption">
-            {post.result.caption}
+            {post.caption}
           </div>
           <div classname="commentContainer">
-          {post.result.comments.map(comments => (
+          {post.comments.map(comments => (
             <CommentPost comment={comments}/>
           ))}
           </div>
