@@ -15,10 +15,12 @@ class Home extends Component {
   this.state={
   }
  }
+
  render() {
   if(!this.props.user) {
     return (<div>No User</div>)
   } else {
+    console.log(this.props.user)
     return (
       <div>
         <SearchField user={this.props.user}/>

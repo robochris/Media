@@ -1,8 +1,14 @@
 const express = require('express');
 const { MongoClient } = require('mongodb');
 const { ObjectId } = require('mongodb')
+const socketIO = require('socket.io')
+const http = require("http");
+const path = require("path");
 const fs = require('fs')
 const app = express()
+const server = http.createServer(app)
+const io = socketIO(server)
+
 const port = 6969
 app.use(express.json())
 app.use(function (req, res, next) {
@@ -16,7 +22,7 @@ const client = new MongoClient('mongodb://localhost:27017')
 
 const register = (username, password, email) => {
   const collection = db.collection('users')
-  const user = {username:username, password:password, alias: username, post:[], follow: [], followers: [], email:email}
+  const user = {username:username, password:password, alias: username, post:[], follow: [], followers: [], friends: [], email:email, socket: null}
   return collection.insertOne(user)
     .then((result) => {
       return result.ops[0]
@@ -37,7 +43,7 @@ app.post('/login', (req, res) => {
         if(!user) {
           return res.send({error: "LOGIN_ERROR"})
         } else {
-          return res.send(user)
+          res.send(user)
         }
     }).catch(err=>{
       return res.send({error: "LOGIN_ERROR"})
@@ -50,8 +56,6 @@ app.get('/allPost/:user', (req,res) => {
   users.findOne({username: req.params.user})
     .then(user => {
       post.find({userId: {$in: user.follow}}).sort({_id: -1}).toArray(function(e, result){
-        console.log("Error: ", e)
-        console.log("Result: ", result)
         res.send(result)
       })
     })
@@ -94,32 +98,83 @@ app.post('/postComment/:user', (req, res) => {
   const users = db.collection('users')
   const posts = db.collection('post')
   console.log(req.body.comment)
-  posts.findOneAndUpdate({_id: ObjectId(req.body.id)}, {$push: {comments: {user: req.params.user, comment: req.body.comment, reply: []}}})
+  posts.findOneAndUpdate({_id: ObjectId(req.body.id)}, {$push: {comments: {user: req.params.user, comment: req.body.comment, reply: []}}}).then((result)=>{console.log(result)})
 })
 
 app.post('/search', (req,res) => {
   const users = db.collection('users')
   const value = new RegExp("^"+req.body.searchValue, 'i')
   users.find({username: {$regex: value}}).toArray(function(e, result){
-    console.log(result)
     res.send(result)
   })
 })
 
 app.post('/search/result', (req,res) => {
   const users = db.collection('users')
-  console.log(req.body.user)
   users.findOne({username: req.body.user}).then(result=>{res.send(result)})
 })
 
 app.post('/addFollow', (req,res) => {
   const users = db.collection('users')
-  users.findOneAndUpdate({_id: ObjectId(req.body.userId)}, {$push: {follow: ObjectId(req.body.userFollow)}}).then(result=>{console.log(result)})
-  users.findOneAndUpdate({_id: ObjectId(req.body.userFollow)}, {$push: {followers: ObjectId(req.body.userId)}}).then(result=>{console.log(result)})
+  users.findOneAndUpdate({_id: ObjectId(req.body.userId)}, {$push: {follow: ObjectId(req.body.userFollow)}})
+  users.findOneAndUpdate({_id: ObjectId(req.body.userFollow)}, {$push: {followers: ObjectId(req.body.userId)}})
+  users.findOne({_id: ObjectId(req.body.userId)}).then(user=>{
+    if(user.followers.some(i=>{return req.body.userFollow===i.toString()})) {
+        users.findOneAndUpdate({_id: ObjectId(req.body.userId)}, {$push: {friends: ObjectId(req.body.userFollow)}})
+        users.findOneAndUpdate({_id: ObjectId(req.body.userFollow)}, {$push: {friends: ObjectId(req.body.userId)}})
+    }
+  })
 })
+
+app.post('/friends', (req, res) => {
+  const users =db.collection('users')
+  users.findOne({_id: ObjectId(req.body.userId)}).then(user=>{
+    users.find({_id: {$in: user.friends}}).toArray(function(e, result){
+      res.send(result)
+    })
+  })
+})
+
+//socket
+app.post('/setSocket', (req, res) => {
+  const users = db.collection('users')
+  console.log(req.body.userId, req.body.socket)
+  users.findOneAndUpdate({_id: ObjectId(req.body.userId)}, {$set: {socket: req.body.socket}})
+})
+
+io.on("connection", socket => {
+  const users = db.collection('users')
+  socket.on("updateUserSocket", data => {
+      users.findOneAndUpdate({_id: ObjectId(data.userId)}, {$set: {socket: socket.id}})
+  });
+
+  socket.on("callUser", data => {
+    socket.to(data.to).emit("gettingCalled", {
+      offer: data.offer,
+      socket: socket.id,
+    })
+  })
+
+  socket.on("ICE", data => {
+    socket.to(data.to).emit("ICERecieve", {
+      candidate: data.candidate
+    })
+  })
+
+  socket.on("makeAnswer", data => {
+    socket.to(data.to).emit("answerMade", {
+      socket: socket.id,
+      answer: data.answer,
+    })
+  })
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected with socket id: "+ socket.id)
+  });
+});
 
 client.connect()
   .then(() => {
     db = client.db("media")
-    app.listen(port, () => console.log(`App listening on port ${port}!`))
+    server.listen(port, () => console.log(`App listening on port ${port}!`))
   })

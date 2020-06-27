@@ -2,16 +2,26 @@ import React, {Component} from 'react';
 import './App.css';
 import { withRouter } from 'react-router-dom';
 import Home from './Home.js'
+import axios from 'axios'
 import SingUp from './SignUp'
 import { connect } from 'react-redux'
 import { loginUser } from './Redux/Actions'
+import io from "socket.io-client";
+
 
 const mapDispatchToProps = {
   loginUser
 }
 
+const setSocket = async (userId, socket) => {
+  socket.emit("updateUserSocket", {
+    userId
+  });
+}
+
 const mapStateToProps = (state) => ({
-  loginError: state.session.error
+  loginError: state.session.error,
+  user: state.session.user
 })
 
 class Login extends Component {
@@ -35,6 +45,7 @@ class Login extends Component {
         this.setState({UserError:true})
         this.setState({PasswordError:true})
       } else {
+        setSocket(this.props.user._id, this.props.user.socket)
         history.push('./')
       }
     })

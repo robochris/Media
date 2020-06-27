@@ -1,5 +1,5 @@
 import axios from 'axios'
-
+import io from "socket.io-client";
 
 export const LOGIN_LOADING = 'LOGIN_LOADING'
 function loginLoading() {
@@ -8,10 +8,10 @@ function loginLoading() {
   }
 }
 export const LOGIN_SUCCESS = 'LOGIN_SUCCESS'
-function loginSucess(user) {
+function loginSucess(user, socket) {
   return {
     type: LOGIN_SUCCESS,
-    user
+    user: {...user, socket}
   }
 }
 export const LOGIN_ERROR = 'LOGIN_ERROR'
@@ -41,7 +41,9 @@ export function loginUser(username, password) {
       if(res.data.error === "LOGIN_ERROR") {
         dispatch(loginError(res.data.error))
       } else {
-        dispatch(loginSucess(res.data))
+        const socket = io("http://localhost:6969/");
+        console.log(socket)
+        dispatch(loginSucess(res.data, socket))
       }
     })
     .catch(function(err){
